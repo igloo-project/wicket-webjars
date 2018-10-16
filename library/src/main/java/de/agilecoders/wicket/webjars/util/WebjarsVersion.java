@@ -26,11 +26,27 @@ public final class WebjarsVersion {
     private static final ConcurrentMap<String, FutureTask<String>> VERSIONS_CACHE = new ConcurrentHashMap<>();
 
     private static final class Holder {
-        private static final IWebjarsSettings settings = WicketWebjars.settings();
+        //
+        // Issue https://github.com/l0rdn1kk0n/wicket-webjars/issues/51
+        // Do not use static attributes related to wicket application
+        // as they are not initializable at deserialization time.
+        //
+        
+        private static final IWebjarsSettings settings() {
+            return WicketWebjars.settings();
+        }
 
-        private static final String recentVersionPattern = Helper.PATH_PREFIX + "[^/]*/" + settings.recentVersionPlaceHolder() + "/.*";
-        private static final String replacePattern = "/" + settings.recentVersionPlaceHolder() + "/";
-        private static final Duration timeout = settings.readFromCacheTimeout();
+        private static final String recentVersionPattern() {
+            return Helper.PATH_PREFIX + "[^/]*/" + settings().recentVersionPlaceHolder() + "/.*";
+        }
+
+        private static final String replacePattern() {
+            return "/" + settings().recentVersionPlaceHolder() + "/";
+        }
+
+        private static final Duration timeout() {
+            return settings().readFromCacheTimeout();
+        }
     }
 
     /**
@@ -44,8 +60,8 @@ public final class WebjarsVersion {
 
         path = prependWebjarsPathIfMissing(path);
 
-        if (path.matches(Holder.recentVersionPattern)) {
-            return path.replaceFirst(Holder.replacePattern, "/" + recentVersion(path) + "/");
+        if (path.matches(Holder.recentVersionPattern())) {
+            return path.replaceFirst(Holder.replacePattern(), "/" + recentVersion(path) + "/");
         }
 
         return path;
@@ -68,7 +84,7 @@ public final class WebjarsVersion {
         }
 
         try {
-            return VERSIONS_CACHE.get(partialPath).get(Holder.timeout.getMilliseconds(), TimeUnit.MILLISECONDS);
+            return VERSIONS_CACHE.get(partialPath).get(Holder.timeout().getMilliseconds(), TimeUnit.MILLISECONDS);
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
             LOG.error("can't collect recent version of {}; {}", partialPath, e.getMessage());
         }

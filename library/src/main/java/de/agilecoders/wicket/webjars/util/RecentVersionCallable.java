@@ -46,10 +46,12 @@ public class RecentVersionCallable implements Callable<String> {
      * @return recent version string
      */
     private static String collectRecentVersionFor(final String partialPath) {
-        return Holder.recentVersionProvider.findRecentVersionFor(partialPath);
+        return Holder.recentVersionProvider().findRecentVersionFor(partialPath);
     }
 
     static final class Holder {
-        static final AssetsMap recentVersionProvider = new AssetsMap(WicketWebjars.settings());
+        static final AssetsMap recentVersionProvider() {
+            return new AssetsMap(WicketWebjars.settings());
+        }
     }
 }
